@@ -1,6 +1,6 @@
 ---
 name: authz-multitenancy
-description: Rules and review checklist for authorization and tenant isolation — who may read or change what, in apps where data belongs to a tenant (complex, organization, account, workspace, building, team). Use it whenever you add or change an endpoint, controller action, policy, role, permission, admin screen, route guard, serializer field, export, background job that reads tenant data, or "only admins can…" / "members can see…" rules, and whenever you review such changes — even when the task never says "security" or "authorization".
+description: Rules and review checklist for authorization and tenant isolation — who may read or change what, in apps where data belongs to a tenant (complex, organization, account, workspace, building, team). Use it whenever you add or change an endpoint, controller action, policy, role, permission, admin screen, route guard, serializer field, export, cache, background job that reads tenant data, or "only admins can…" / "members can see…" rules, and whenever you review such changes — even when the task never says "security" or "authorization".
 ---
 
 # Authorization and multi-tenancy
@@ -63,6 +63,10 @@ ids. Authorize the parent (tenant) **before** looking up the child.
   autocomplete ("tags used in the tenant"), error messages. Each runs the same checks.
 - Background jobs re-load records and re-check tenant ownership; they do not trust ids captured at
   enqueue time blindly.
+- Caches are side channels too: a cached response, fragment or computed value whose content
+  depends on the tenant, the role or the user has all of them in its key (`[tenant_id, role,
+  user_id, record.cache_key_with_version]`), or one user is served what was cached for another.
+  Invalidate on membership/role change.
 
 ## 7. Frontend reflects, backend enforces
 
@@ -83,6 +87,7 @@ ids. Authorize the parent (tenant) **before** looking up the child.
 - [ ] Serializer per audience; side channels (exports, notifications, suggestions) checked.
 - [ ] Tests: role × action × {own tenant, foreign tenant existing id, foreign missing id,
       anonymous, inactive member, platform role without membership}.
+- [ ] Cache keys include tenant / role / user whenever the cached content depends on them.
 - [ ] Frontend: menu and guards follow the selected tenant's role; backend errors handled.
 
 ## Review / judge checklist (try to break it)
@@ -105,3 +110,6 @@ ids. Authorize the parent (tenant) **before** looking up the child.
    a restricted one (operator, staff) — a visible link that ends in a redirect is a bug; check that
    a 403 inside the page does not log the user out or redirect unexpectedly.
 8. Check the tests really exercise the matrix (not only the happy admin path).
+9. `grep` the diff for `Rails.cache`, `cache(`, `fetch(`, memoization in class variables: request
+   the cached thing as user A (admin, tenant 1), then as user B (member, tenant 2) — does B see
+   A's version?

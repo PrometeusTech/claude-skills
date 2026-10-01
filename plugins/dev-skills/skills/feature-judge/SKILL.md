@@ -73,6 +73,8 @@ loaded checklist must end up in the coverage matrix (§6).
 | params lists, redirects, fetching URLs, cookies/CORS/CSP config, logging, analytics events, error handling, public endpoints | web-security |
 | pages, forms, modals, routes, translations, data-fetching hooks, third-party scripts | frontend-quality |
 | migrations, env vars, jobs/schedulers, dependencies/lockfiles, breaking contract changes, deploy order | deploy-safety |
+| statuses/transitions, amounts/totals, dates/ranges/schedules, bookings/stock, counters, soft delete, admin actions on others' data | domain-integrity |
+| mailers, notifications, message templates, recipient lists, webhook endpoints/handlers, provider clients | notifications-integrations |
 
 Always apply these as well, whatever the diff:
 - **Input robustness:** malformed params (wrong type, arrays/objects where scalars are expected,
@@ -83,6 +85,10 @@ Always apply these as well, whatever the diff:
   copied from another operation that this one can never return is a finding, so is a reachable
   code that is undocumented). Every code has frontend translations. Unexpected changes to
   unrelated contract files are questioned.
+- **Consistency with the rest of the API:** new endpoints follow the conventions of the existing
+  ones — pagination format and params, error body shape, status codes for the same situation,
+  field naming and casing, date/amount formats, filter param names. Compare with two or three
+  existing endpoints of the same kind; a new convention is a finding unless the plan chose it.
 - **Shared code blast radius:** any change to shared infrastructure is re-tested for its other
   consumers.
 - **Error paths users actually hit:** acting on a record that was just deleted (by another tab or

@@ -13,9 +13,11 @@ pe disc local. Repo-ul e un **marketplace de plugin-uri** Claude Code cu un sing
 | `db-performance` | subiect | liste, paginare, N+1, indecși, căutare, migrații, liste mari în UI |
 | `text-input-hardening` | subiect | câmpuri text (titluri, tag-uri, nume de fișier): caractere invizibile, lungimi, unicitate după colația DB, text ostil în UI |
 | `idempotency-retries` | subiect | create cu `Idempotency-Key`, retry-uri, cereri concurente, indecși unici, timeout-uri pe clienți HTTP externi |
-| `web-security` | subiect | XSS, params permise, redirect-uri, SSRF, CORS/CSRF, secrete și date personale în loguri / analytics, endpoint-uri publice, erori silențioase |
+| `web-security` | subiect | XSS, params permise, redirect-uri, SSRF, CORS/CSRF, secrete și date personale în loguri / analytics, endpoint-uri publice, erori silențioase, ciclul de viață al datelor personale |
 | `frontend-quality` | subiect | accesibilitate (axe, tastatură), traduceri complete, date proaspete după modificări, deep link / refresh / back, stări, CSP, cost per pagină |
-| `deploy-safety` | subiect | migrații, expand / contract, compatibilitate API ↔ frontend vechi, variabile de mediu, job-uri, dependențe, rollback |
+| `deploy-safety` | subiect | migrații, expand / contract, compatibilitate API ↔ frontend vechi, variabile de mediu, job-uri și scheduler-e, dependențe, rollback |
+| `domain-integrity` | subiect | state machines, sume și rotunjiri, date / ore / fus orar, rezervări și suprapuneri, contoare și invarianți, soft delete, audit trail |
+| `notifications-integrations` | subiect | e-mail / push / WhatsApp: după commit, o singură dată, destinatarii corecți, traduceri, volum; webhook-uri primite (semnătură, replay, ordine); clienți de provideri |
 | `implement-pr` | flux | implementarea unei schimbări ca un PR: context, teste întâi, verificare locală, raport |
 | `feature-judge` | flux | review independent, cu dovezi, pe unul sau mai multe PR-uri, cu prompt de fix |
 

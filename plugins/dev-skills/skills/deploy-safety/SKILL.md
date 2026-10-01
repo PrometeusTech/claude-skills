@@ -1,6 +1,6 @@
 ---
 name: deploy-safety
-description: Rules and review checklist for changes that must survive the deploy itself — migration order and reversibility, schema and code deployed at different moments, new environment variables and secrets, backward compatibility between a new API and the old frontend still open in browsers (and the reverse), background jobs lost on restart or run twice, scheduled jobs, new or upgraded dependencies (security advisories, licenses, lockfiles), feature flags and rollback. Use it whenever a change adds a migration, an env var, a job or scheduler, a dependency, a breaking API change, or anything that needs a specific deploy order, and whenever you review such changes — even if the task only says "add a column" or "bump the gem".
+description: Rules and review checklist for changes that must survive the deploy itself — migration order and reversibility, schema and code deployed at different moments, new environment variables and secrets, backward compatibility between a new API and the old frontend still open in browsers (and the reverse), background jobs lost on restart or run twice, scheduled jobs that overlap or span many tenants, new or upgraded dependencies (security advisories, licenses, lockfiles), feature flags and rollback. Use it whenever a change adds a migration, an env var, a job or scheduler, a dependency, a breaking API change, or anything that needs a specific deploy order, and whenever you review such changes — even if the task only says "add a column" or "bump the gem".
 ---
 
 # Deploy safety
@@ -50,6 +50,11 @@ Code and schema do not change at the same instant, and old clients linger:
   happen (emails, payments, cleanup) is re-derivable from DB state, or uses a durable mechanism.
 - Jobs are idempotent (they may run twice); schedulers run in one process only and are guarded
   against running in consoles, rake tasks and tests.
+- A scheduled run must not overlap the previous one (a lock or a "running since" marker with
+  expiry); if a run takes longer than the interval, the next one is skipped, not stacked.
+- Jobs over many tenants or rows work in batches, commit per batch, have a time budget, and can
+  resume where they stopped; one tenant's failure does not stop the others (reported, then
+  continue).
 
 ## 5. Dependencies
 
@@ -71,6 +76,7 @@ Code and schema do not change at the same instant, and old clients linger:
 - [ ] Expand/contract respected; old frontend works against new API; deploy order stated.
 - [ ] Env vars documented, validated at boot, safe defaults; secrets provisioned first.
 - [ ] Job args backward compatible; jobs idempotent; lost-job impact understood.
+- [ ] Scheduled runs cannot overlap; multi-tenant jobs batched, resumable, isolated per tenant.
 - [ ] Dependencies justified, audited, lockfiles committed; no major upgrades hidden in features.
 - [ ] Rollback path known.
 
@@ -82,6 +88,7 @@ Code and schema do not change at the same instant, and old clients linger:
    first): does every existing screen still work?
 3. Diff the contract: removed/retyped fields or new required params? Breaking-change check result?
 4. `grep` the diff for new `ENV[...]` / `process.env` reads: documented? validated? safe default?
-5. Enqueue a job with the base code's arguments and run it with the head code.
+5. Enqueue a job with the base code's arguments and run it with the head code. Start a
+   scheduled job twice at once; make it fail on one tenant out of several.
 6. New dependencies: audit output, license, maintenance, size; lockfile matches the manifest.
 7. Write down the rollback: can the base release boot against the head schema?

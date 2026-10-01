@@ -29,6 +29,10 @@ it is proven by tests and by the project's own checks, and it says honestly what
    - pages, forms, modals, routes, translations, data fetching → **frontend-quality**
    - migrations, env vars, jobs, dependencies, breaking API changes, deploy order →
      **deploy-safety**
+   - statuses, amounts, dates and ranges, bookings/stock, counters, soft delete, audit trail →
+     **domain-integrity**
+   - e-mails, notifications, message templates, webhooks, provider clients →
+     **notifications-integrations**
    Most features touch at least two. If something important is unclear (a product rule, who may
    do what), ask before building rather than guessing in code.
 
