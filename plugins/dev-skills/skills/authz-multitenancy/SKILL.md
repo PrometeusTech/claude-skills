@@ -95,8 +95,13 @@ ids. Authorize the parent (tenant) **before** looking up the child.
 3. Pass a `tenant_id` / `client_id` parameter pointing elsewhere; does anything trust it?
 4. Compare list vs detail with the same role: can the list reveal something the detail refuses
    (including counts, tag/suggestion lists, search results)?
-5. Look for broad helpers used where the product named specific roles.
+5. Look for broad helpers used where the product named specific roles — and for policies that
+   allow a role which is only refused by some other layer (a base controller, a tenant concern).
+   Defense that depends on a layer the policy does not know about breaks when that layer changes;
+   report it even if the endpoint currently refuses.
 6. Serializer diff: any new field that a lower role should not see?
-7. Frontend: open the admin URL directly as a member; check the menu for each role; check that a
-   403 inside the page does not log the user out or redirect unexpectedly.
+7. Frontend: open the admin URL directly as a member; check the menu **and every entry point**
+   (cards, links from other pages, dashboards) for each role, including users whose only role is
+   a restricted one (operator, staff) — a visible link that ends in a redirect is a bug; check that
+   a 403 inside the page does not log the user out or redirect unexpectedly.
 8. Check the tests really exercise the matrix (not only the happy admin path).

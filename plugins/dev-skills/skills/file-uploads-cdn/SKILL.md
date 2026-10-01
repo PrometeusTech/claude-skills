@@ -30,12 +30,20 @@ cross-cutting, not as part of the feature that motivated it.
 
 - Allowlist types per policy. Never a denylist.
 - Detect from content: magic bytes, and for container formats inspect the container.
-  - DOCX / XLSX / PPTX are ZIP files: check `[Content_Types].xml` and the main part
-    (`word/document.xml` for Word). Reject macro-enabled variants (`.docm`, a `vbaProject.bin`
-    part, macro content types) unless the product explicitly wants them.
-  - Legacy DOC / XLS / PPT share the OLE compound-file magic (`D0 CF 11 E0`); tell them apart by
-    the directory streams (`WordDocument` for Word), not by the extension.
-  - PDF: `%PDF-` header. Images: real image header, then decode it (see §6).
+  - DOCX / XLSX / PPTX are ZIP files. Decide from the **content types declared in
+    `[Content_Types].xml`**, not from entry names: for Word the main part's override must be
+    exactly `application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml`.
+    That one rule rejects `.docm` (`…macroEnabled.main+xml`), `.dotx` / `.dotm` (`…template…`)
+    and any `vbaProject` part however it is named. Checking that `word/document.xml` exists or
+    that no entry is literally called `vbaProject.bin` is bypassed by renaming.
+  - Legacy DOC / XLS / PPT share the OLE compound-file magic (`D0 CF 11 E0`). Tell them apart by
+    **parsing the compound-file directory** and finding the `WordDocument` stream as a directory
+    entry — not by searching the bytes for the UTF-16 string `WordDocument`, which any XLS can
+    contain (a sheet cell, a stream name) and so passes as a Word file.
+  - PDF: `%PDF-` at offset 0. A PDF can also be valid HTML (polyglot); serving it as an
+    attachment with the stored type and `nosniff` (§7) neutralizes it, and you may additionally
+    reject PDFs whose first kilobytes contain `<html` / `<script`.
+  - Images: real image header, then decode it (see §6).
 - The client's `Content-Type` and the extension are hints for error messages only. A file whose
   extension disagrees with its detected type is rejected, not "fixed".
 - Store the detected type and use it when serving.
@@ -49,6 +57,9 @@ cross-cutting, not as part of the feature that motivated it.
 - The web server has its own limit (e.g. nginx `client_max_body_size`); keep it slightly above the
   app limit so users get the app's clear error, not a bare 413 page.
 - Empty files are invalid unless the product says otherwise.
+- Count the in-memory copies of one upload (raw body, decoded string, `StringIO`, buffer for the
+  storage client): three copies of a 10 MB file is 30 MB per request, times the worker count.
+  Stream from the tempfile where you can and measure peak memory with a max-size file.
 
 ## 4. Store privately, reference by key
 
@@ -56,14 +67,19 @@ cross-cutting, not as part of the feature that motivated it.
   authorization check. "It's just a blank form" is still private by default — public is a
   deliberate, documented decision.
 - Generate the storage key yourself (random/UUID, grouped by tenant and model). Never use the
-  user's filename in the path. Keep the original filename only as display metadata.
+  user's filename in the path. Keep the original filename only as display metadata, cleaned like
+  any other user text (NUL, control and bidi characters, length — see the text-input-hardening
+  skill).
 - Never return storage keys, bucket paths or storage credentials in API responses.
 
 ## 5. Keep database and storage consistent
 
 Storage calls are not part of your DB transaction, so decide the order explicitly:
 
-- **Create:** upload the object first, then save the row. If the save fails, delete the object
+- **Validate everything first.** Every check that can fail on the row (title, tags, original
+  file name, lengths, uniqueness, idempotency key) runs **before** the storage call. A NUL byte
+  in the file name that only fails at `INSERT` means the object is already uploaded and orphaned.
+- **Create:** upload the object, then save the row. If the save still fails, delete the object
   you just uploaded (compensation), or leave it for an orphan-cleanup job — but never leave a row
   pointing at nothing.
 - **Replace:** upload the new object, save the row, and delete the old object **after commit**.
@@ -73,6 +89,8 @@ Storage calls are not part of your DB transaction, so decide the order explicitl
 - Two concurrent replacements must not leave the row pointing at a deleted object (lock the row or
   compare the key you are replacing).
 - Deletes are idempotent (object already gone = success).
+- The storage client has explicit open/read timeouts and a small, bounded retry for idempotent
+  calls (PUT with the same key, DELETE); see the idempotency-retries skill §6.
 
 ## 6. Images and other decoded formats
 
@@ -85,13 +103,21 @@ Storage calls are not part of your DB transaction, so decide the order explicitl
 ## 7. Serve downloads safely
 
 - Prefer redirecting to a short-lived signed URL over streaming the bytes through the app process.
-- `Content-Disposition: attachment` with a sanitized name: strip CR/LF, quotes, path separators and
-  control characters; cap the length; send `filename*=UTF-8''<percent-encoded>` plus an ASCII
-  fallback. The download name is usually "<document title>.<detected extension>", not the
-  uploader's original name.
+- `Content-Disposition: attachment` with a sanitized name: strip CR/LF, quotes, path separators,
+  control and bidi characters; cap the length; send `filename*=UTF-8''<percent-encoded>` plus an
+  ASCII fallback. The download name is usually "<document title>.<detected extension>", not the
+  uploader's original name — and not "<title>.pdf.pdf" when the title already ends in the
+  extension.
+- **The name the user gets is what the browser saves**, not a `filename` field in a JSON
+  response. When you redirect to a CDN, the CDN's response headers decide the saved name (the
+  app's headers on the redirect are ignored), so set the disposition through the CDN/storage
+  (object metadata or a signed response-header parameter, if the provider supports it) or accept
+  and document the object name. Verify with a real browser download.
 - `Content-Type` from the stored detected type; `X-Content-Type-Options: nosniff`.
 - The download endpoint runs the same authorization as the metadata endpoint (see the
   authz-multitenancy skill). Signed URLs are issued only after that check.
+- A download of a deleted or missing file says "not found" (and the frontend shows that), not
+  "you are not allowed".
 
 ## 8. Frontend expectations
 
@@ -105,8 +131,12 @@ messages. See `references/react.md`.
 - [ ] Type detected from content; macro-enabled / disguised formats rejected; detected type stored.
 - [ ] Size enforced before full read; base64 overhead handled; web server limit consistent.
 - [ ] Private storage, generated keys, no keys or credentials in responses.
-- [ ] Create / replace / delete ordering as in §5; failures reported; orphan cleanup exists or is noted.
-- [ ] Download: authorization, signed URL or checked stream, safe `Content-Disposition`, `nosniff`.
+- [ ] All row validation (incl. cleaned file name) before the storage call; create / replace /
+      delete ordering as in §5; failures reported; orphan cleanup exists or is noted.
+- [ ] Storage client: explicit timeouts, bounded retries, separate credentials per purpose.
+- [ ] Memory: copies per upload counted; peak measured with a max-size file.
+- [ ] Download: authorization, signed URL or checked stream, safe `Content-Disposition`, `nosniff`;
+      saved file name checked in a browser; deleted file → "not found".
 - [ ] If the shared pipeline changed: every consumer re-tested.
 - [ ] Tests: allowed types, each rejection path, oversize, empty, replace/delete cleanup (stub the
       storage client, and assert the calls — a stub that accepts anything proves nothing).
@@ -117,12 +147,19 @@ messages. See `references/react.md`.
 Build the probe files in a scratch directory, never in the repo:
 
 1. Disguised files: `.exe`/`.html` renamed to `.pdf`/`.docx`; a ZIP renamed to `.docx`; an XLSX
-   renamed to `.docx`; a macro-enabled `.docm` renamed to `.docx`; a PDF/HTML polyglot.
+   renamed to `.docx`; a `.docm` and a `.dotx` renamed to `.docx`; a DOCX with `vbaProject.bin`
+   renamed to an innocent name but still declared in `[Content_Types].xml`; an XLS that contains
+   the text `WordDocument` (in a cell or as a fake stream name) renamed to `.doc`; a PDF/HTML
+   polyglot.
 2. Empty file, 1 byte over the limit, a payload far over the limit (watch memory and time — is it
    rejected before decode/read?).
-3. Filenames: `../../etc/passwd`, `a"; b.pdf`, CR/LF inside, very long, emoji / diacritics, RTL override.
+3. Filenames: `../../etc/passwd`, `a"; b.pdf`, **NUL inside**, CR/LF inside, very long (300+),
+   emoji / diacritics, RTL override (U+202E). For each: response status **and** whether an object
+   was left in storage without a row.
 4. Spoofed `Content-Type` header vs real bytes.
-5. Download headers for titles with quotes, diacritics, newlines.
+5. Download: headers for titles with quotes, diacritics, newlines; then the **name the browser
+   actually saves** (Playwright `download.suggestedFilename()`), including through the CDN
+   redirect; a title already ending in `.pdf`; a deleted document's download link.
 6. Storage failure injected mid-create / mid-replace / mid-delete: what is left in DB and in storage?
 7. Two concurrent replacements of the same record.
 8. Access: foreign tenant, anonymous, lower role → metadata **and** download refused; signed URL
@@ -130,3 +167,5 @@ Build the probe files in a scratch directory, never in the repo:
 9. Other features that use the shared pipeline still accept what they accepted before.
 10. Frontend: client-side limits match the server; server errors shown translated; no whole-file
     reads into memory for large files.
+11. Memory and time for a max-size and a far-over-size upload (peak RSS of the worker, not only
+    the response); storage stubbed to hang → bounded by the client timeout.
