@@ -40,7 +40,15 @@ directory, state that assumption at the top of the report, and continue.
 ## 1. Scope
 
 Identify exactly what is being judged: PR numbers or merge commits per repo, and the diff range
-(`git diff <base> <merge>`). Read the plan / decisions document for the feature and the projects'
+(`git diff <base> <merge>`, or `<default>...<branch>` for an open PR). The preferred moment is the
+**open PR, before merge**: fixes land in the same PR and branch-based tools (e.g.
+`/security-review`) still have a diff to read; a merged feature can still be judged, it just
+costs a follow-up PR.
+
+If the PR description has a **Pre-PR check** section, read it: do not re-verify, item by item,
+what it reports as verified with a test or command unless the area is high-risk (authorization,
+files, money, data loss) — sample one or two of those instead — and start from its "left for the
+judge" list. Note in the coverage matrix which items you took from it. Read the plan / decisions document for the feature and the projects'
 agent instructions — the intended behavior is the yardstick, not your preferences. Write down the
 intended role × action matrix before testing it.
 
