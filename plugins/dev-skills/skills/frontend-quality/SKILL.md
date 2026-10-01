@@ -6,7 +6,7 @@ description: Rules and review checklist for the user-facing quality of a web fro
 # Frontend quality
 
 Most frontend bugs that reach users are not crashes: a list that still shows a deleted item, a
-modal that keyboard users cannot leave, an English string on a Romanian page, a link that works
+modal that keyboard users cannot leave, an untranslated string on a localized page, a link that works
 only when clicked from the menu, a page that breaks on refresh. The rules below are part of
 "done"; the checklist is what a reviewer does in a real browser.
 

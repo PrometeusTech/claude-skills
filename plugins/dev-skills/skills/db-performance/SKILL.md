@@ -29,7 +29,7 @@ Stack specifics:
 
 - Eager load exactly what the serializer touches — no more (unused includes cost memory), no less
   (N+1). Check the serializer, not the controller, to know what is needed.
-- Anything computed per row from associations (sums, "active borrow", "has disputes") becomes one
+- Anything computed per row from associations (sums, "active subscription", "has open orders") becomes one
   aggregate query or a preloaded association with the filter in SQL — not Ruby over every loaded
   row.
 - Guard it with a test that counts queries for 2 records and for N records and asserts they are
@@ -95,7 +95,7 @@ response size. Put the numbers in the PR. "Feels fast locally" with 5 rows prove
    growing tables, per-row HTTP/storage calls.
 5. Aggregations: "list of tags used", dashboards, counters — computed in SQL or by loading every row?
 6. New unique index: duplicate audit exists? Collation considered (case/diacritics)? Does
-   de-duplication in code agree with the DB (`Ștampilă` vs `stampila`)?
+   de-duplication in code agree with the DB (`Café` vs `cafe`)?
 7. Frontend network tab: requests per page load and per filter change; stale response race;
    DOM node count on the largest realistic list.
 8. Bundle: build before and after (`main` vs feature) and compare the entry chunk and the new

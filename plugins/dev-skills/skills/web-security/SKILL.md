@@ -1,6 +1,6 @@
 ---
 name: web-security
-description: Rules and review checklist for web-application security beyond authorization — stored and reflected XSS, mass assignment / over-permissive params, open redirects, SSRF on user-supplied URLs, CORS and CSRF on cookie-authenticated endpoints, secrets and personal data in logs, job arguments, error trackers and analytics, rate limiting and enumeration on public endpoints, and silent failures that hide attacks or data loss. Use it whenever you add or change an endpoint, a param list, a redirect, a fetch of a URL, a cookie, CORS/CSP config, logging, analytics events, error handling or a public (unauthenticated) endpoint, and whenever you review such changes — even if the task never says "security". Pair it with authz-multitenancy (who may do what) and file-uploads-cdn (files).
+description: Rules and review checklist for web-application security beyond authorization — stored and reflected XSS, mass assignment / over-permissive params, open redirects, SSRF on user-supplied URLs, CORS and CSRF on cookie-authenticated endpoints, secrets and personal data in logs, job arguments, error trackers and analytics, rate limiting and enumeration on public endpoints, silent failures that hide attacks or data loss, error traceability, and the lifecycle of personal data (deletion, anonymization, retention). Use it whenever you add or change an endpoint, a param list, a redirect, a fetch of a URL, a cookie, CORS/CSP config, logging, analytics events, error handling or a public (unauthenticated) endpoint, and whenever you review such changes — even if the task never says "security". Pair it with authz-multitenancy (who may do what) and file-uploads-cdn (files).
 ---
 
 # Web security beyond "who may do what"
@@ -26,7 +26,7 @@ finding.
 
 ## 2. Writes accept only the intended fields
 
-- Strong params list exactly what this role may set. Fields like `client_id`, `role`, `status`,
+- Strong params list exactly what this role may set. Fields like `tenant_id`, `role`, `status`,
   `user_id`, `owner_id`, `price`, `verified`, `*_at` come from the server, not from the body.
 - Different roles that may set different fields → different param lists, chosen after
   authorization.
@@ -80,6 +80,19 @@ Silent failures hide both attacks and data loss:
 - Retries that give up tell the user and the tracker.
 - Frontend: a failed request shows an error state, not an empty list that looks like "no data";
   `?.` chains do not silently skip a required step.
+- Errors are traceable: logs carry a request id (and the job id in jobs), the error tracker gets
+  the tenant and user ids (not their personal data) and the relevant record ids.
+
+## 8. Personal data lifecycle
+
+- Know what personal data the feature stores (names, phones, addresses, documents, messages) and
+  why; do not store more than the feature needs.
+- Deleting an account or a tenant, or a user leaving a tenant, has a defined effect on every new
+  table and file: deleted, anonymized, or kept with a reason (legal, financial). Files in storage
+  and scheduled jobs/notifications for that user are included.
+- Retention: data that is only needed for a period (logs, raw webhook payloads, exports, tokens)
+  has a cleanup task.
+- An export of a user's own data, if the product offers one, includes the new data.
 
 ## Implementation checklist
 
@@ -89,13 +102,16 @@ Silent failures hide both attacks and data loss:
 - [ ] Cookie-authenticated writes protected (SameSite + Origin/CSRF); CORS origin list explicit.
 - [ ] New secret-bearing params filtered; job args carry ids; analytics/Sentry events free of PII.
 - [ ] Public endpoints rate limited, uniform responses, tokens expire.
-- [ ] Error handling specific; no swallowed errors; fallbacks visible and logged.
+- [ ] Error handling specific; no swallowed errors; fallbacks visible and logged; request id and
+      tenant/user ids in logs and the error tracker.
+- [ ] New personal data: purpose, deletion/anonymization on account/tenant removal (rows, files,
+      jobs), retention cleanup.
 
 ## Review / judge checklist (try to break it)
 
 1. Store `<img src=x onerror=alert(1)>`, `javascript:alert(1)` and `"><svg onload=…>` in every new
    text/URL field; view it in the app, in emails, PDFs and exports.
-2. Send extra fields in each write (`client_id`, `role`, `status`, `user_id`, `*_at`) — are they
+2. Send extra fields in each write (`tenant_id`, `role`, `status`, `user_id`, `*_at`) — are they
    ignored? Compare the stored row.
 3. Redirect params with `//evil.example`, `https:evil.example`, `/\evil.example`.
 4. User-supplied URLs pointing at `http://127.0.0.1`, `http://169.254.169.254`, a private IP, a
@@ -107,3 +123,5 @@ Silent failures hide both attacks and data loss:
    hammer it → throttled.
 8. Inject failures (stub a dependency to raise) and check that the user sees an error and the
    tracker gets an event — no "success" with nothing done.
+9. For each new table / file / job holding personal data: delete the user, remove them from the
+   tenant, delete the tenant — what remains in the DB, in storage and in the job queue?

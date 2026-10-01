@@ -3,7 +3,7 @@
 ## Eager loading
 - `preload` (separate queries) is the safe default; `includes` switches to a JOIN when you also
   filter on the association (`references`); `eager_load` forces the JOIN. Pick deliberately.
-- Filtered associations: define a scoped association (`has_many :active_borrows, -> { active }`)
+- Filtered associations: define a scoped association (`has_many :active_orders, -> { active }`)
   and preload that, instead of preloading everything and filtering in Ruby.
 - Preload after authorization and only for the fields the serializer uses; different actions
   (index vs show) usually need different includes — keep them per action, not one big constant.

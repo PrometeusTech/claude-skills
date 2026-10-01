@@ -1,6 +1,6 @@
 ---
 name: implement-pr
-description: Workflow for implementing a feature, fix or refactor as one reviewable pull request in a real codebase — read the project rules and the plan, load the matching topic skills, write tests first, keep scope tight, verify locally with the project's own CI steps, self-review, and report honestly. Use it whenever the user asks to implement, build, add, fix or refactor something that will end up as a PR ("implement PR-BE-12", "add the documents page", "fix the upload bug", "do the next item in the plan"), especially in multi-repo (backend + frontend) projects.
+description: Workflow for implementing a feature, fix or refactor as one reviewable pull request in a real codebase — read the project rules and the plan, load the matching topic skills, write tests first, keep scope tight, verify locally with the project's own CI steps, self-review, and report honestly. Use it whenever the user asks to implement, build, add, fix or refactor something that will end up as a PR ("implement step 3 of the plan", "add the documents page", "fix the upload bug", "do the next item in the plan"), especially in multi-repo (backend + frontend) projects.
 ---
 
 # Implement a change as one clean PR
@@ -29,6 +29,10 @@ it is proven by tests and by the project's own checks, and it says honestly what
    - pages, forms, modals, routes, translations, data fetching → **frontend-quality**
    - migrations, env vars, jobs, dependencies, breaking API changes, deploy order →
      **deploy-safety**
+   - statuses, amounts, dates and ranges, bookings/stock, counters, soft delete, audit trail →
+     **domain-integrity**
+   - e-mails, notifications, message templates, webhooks, provider clients →
+     **notifications-integrations**
    Most features touch at least two. If something important is unclear (a product rule, who may
    do what), ask before building rather than guessing in code.
 
@@ -54,7 +58,7 @@ failure, the file name actually served, the second request's outcome.
 
 ## 4. Verify like CI would
 
-- Find the project's CI definition and any local runner script (`bin/ci-local`, `yarn ci:local`,
+- Find the project's CI definition and any local runner script (`bin/ci`, `make check`, an npm `ci` script,
   `make check`…). Run all of it locally before pushing — tests, lint, type check, security scan,
   schema drift, contract checks, build — and fix what fails. Do not rely on remote CI being up.
 - If a step cannot run in your environment, say which and why; do not report it as passing.

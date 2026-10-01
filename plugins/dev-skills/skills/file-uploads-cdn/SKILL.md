@@ -1,6 +1,6 @@
 ---
 name: file-uploads-cdn
-description: Rules and review checklist for anything that accepts, stores, serves or deletes user files — uploads, attachments, documents, images, avatars, imports, downloads, signed URLs, CDN or object storage (BunnyNet, S3, local disk on a VM), and the shared upload infrastructure (validators, content-type detection, uploaders). Use it whenever you implement, change or review such code, even if the task only says "add a PDF field", "let admins attach a file", "allow Word documents" or "fix the download link", and whenever a diff touches upload validators, uploaders or storage services, because those are shared by every feature that handles files.
+description: Rules and review checklist for anything that accepts, stores, serves or deletes user files — uploads, attachments, documents, images, avatars, imports, downloads, signed URLs, CDN or object storage (BunnyNet, S3, local disk on a VM), the shared upload infrastructure (validators, content-type detection, uploaders), and generated files (PDF, CSV, exports). Use it whenever you implement, change or review such code, even if the task only says "add a PDF field", "let admins attach a file", "allow Word documents" or "fix the download link", and whenever a diff touches upload validators, uploaders or storage services, because those are shared by every feature that handles files.
 ---
 
 # File uploads, storage and downloads
@@ -119,7 +119,18 @@ Storage calls are not part of your DB transaction, so decide the order explicitl
 - A download of a deleted or missing file says "not found" (and the frontend shows that), not
   "you are not allowed".
 
-## 8. Frontend expectations
+## 8. Generated files (PDF, CSV, exports)
+
+- Generated files are documents of the tenant: same authorization, private storage, signed or
+  checked download as uploads.
+- User content inside them is escaped for the format (PDF markup, CSV formula injection: prefix
+  cells starting with `=`, `+`, `-`, `@` with `'`).
+- Fonts cover the product's language: letters outside Latin-1 (`ș ł ő č`, Cyrillic, Greek) need
+  a Unicode TTF; built-in PDF fonts render them as `?` or crash. Test with real text.
+- Heavy generation (many pages, images, whole-tenant exports) runs in a job or is bounded by size
+  and time; the request does not block a web worker for tens of seconds.
+
+## 9. Frontend expectations
 
 Mirror the server rules in the UI (accept attribute, size check, readable error) so users get fast
 feedback — but the server stays the only enforcement. Map the server's error codes to translated
@@ -141,6 +152,7 @@ messages. See `references/react.md`.
 - [ ] Tests: allowed types, each rejection path, oversize, empty, replace/delete cleanup (stub the
       storage client, and assert the calls — a stub that accepts anything proves nothing).
 - [ ] API contract documents the upload fields, limits and error codes.
+- [ ] Generated files: authorized, escaped (CSV formulas), Unicode fonts, bounded or async.
 
 ## Review / judge checklist (try to break it)
 
@@ -169,3 +181,6 @@ Build the probe files in a scratch directory, never in the repo:
     reads into memory for large files.
 11. Memory and time for a max-size and a far-over-size upload (peak RSS of the worker, not only
     the response); storage stubbed to hang → bounded by the client timeout.
+12. Generated files: put letters from the product's language outside Latin-1, `=HYPERLINK(...)`, HTML and a 5,000-character text into the
+    source data; generate for the largest realistic tenant; check rendering, escaping, time and
+    who can download it.
