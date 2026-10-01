@@ -11,6 +11,8 @@ pe disc local. Repo-ul e un **marketplace de plugin-uri** Claude Code cu un sing
 | `file-uploads-cdn` | subiect | upload-uri, atașamente, descărcări, CDN / storage, validatoare de fișiere |
 | `authz-multitenancy` | subiect | endpoint-uri, policies, roluri, serializere, guard-uri, date per tenant |
 | `db-performance` | subiect | liste, paginare, N+1, indecși, căutare, migrații, liste mari în UI |
+| `text-input-hardening` | subiect | câmpuri text (titluri, tag-uri, nume de fișier): caractere invizibile, lungimi, unicitate după colația DB, text ostil în UI |
+| `idempotency-retries` | subiect | create cu `Idempotency-Key`, retry-uri, cereri concurente, indecși unici, timeout-uri pe clienți HTTP externi |
 | `implement-pr` | flux | implementarea unei schimbări ca un PR: context, teste întâi, verificare locală, raport |
 | `feature-judge` | flux | review independent, cu dovezi, pe unul sau mai multe PR-uri, cu prompt de fix |
 
@@ -55,11 +57,19 @@ flux se pot cere explicit:
 - `/dev-skills:implement-pr` + ce ai de implementat
 - `/dev-skills:feature-judge` + PR-urile sau intervalul de commit-uri de verificat
 
+`feature-judge` rulează ca **sub-agent separat** (`context: fork`) pe modelul `opus`, în prim-plan
+(`background: false`, ca să aibă toate tool-urile). Sub-agentul nu vede conversația, deci scopul
+se dă complet în argumente (repo-uri, PR-uri sau commit-uri, planul de referință). Raportul se
+întoarce ca text în conversație.
+
 ## Cum le îmbunătățim
 
 Când un judge sau un review găsește o categorie nouă de problemă, adaug-o în lista de verificare
 a skill-ului de subiect potrivit (sau într-un skill nou), printr-un PR aici. Așa lecția ajunge în
 toate proiectele.
+
+Rezultatele evaluărilor (cu skill vs fără skill) sunt în `evals/`, fără detalii din proiectele
+pe care s-au rulat.
 
 Verificare locală înainte de push:
 

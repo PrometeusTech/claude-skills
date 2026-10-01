@@ -43,6 +43,8 @@ Stack specifics:
   (but keep one that a foreign key needs).
 - Uniqueness the model validates must also be a unique index (otherwise races create duplicates);
   before adding one to an existing table, audit for duplicates under the column's collation.
+  De-duplication done in application code (tags, suggestions) must fold case **and** accents
+  the way the collation does (see the text-input-hardening skill §3).
 - `LIKE '%term%'` cannot use a B-tree index. Fine for small per-tenant sets; measure and note the
   threshold where full-text search becomes necessary.
 - JSON arrays (tags) cannot be indexed directly; for frequent filtering use a join table, a
@@ -92,6 +94,10 @@ response size. Put the numbers in the PR. "Feels fast locally" with 5 rows prove
 4. Look for Ruby loops over relations, `.map(&:assoc)`, `.count` inside serializers, `.all` on
    growing tables, per-row HTTP/storage calls.
 5. Aggregations: "list of tags used", dashboards, counters — computed in SQL or by loading every row?
-6. New unique index: duplicate audit exists? Collation considered (case/diacritics)?
+6. New unique index: duplicate audit exists? Collation considered (case/diacritics)? Does
+   de-duplication in code agree with the DB (`Ștampilă` vs `stampila`)?
 7. Frontend network tab: requests per page load and per filter change; stale response race;
-   DOM node count on the largest realistic list; bundle size change.
+   DOM node count on the largest realistic list.
+8. Bundle: build before and after (`main` vs feature) and compare the entry chunk and the new
+   route chunk sizes; admin-only code must not land in the entry chunk.
+9. Memory per request for endpoints that receive or produce large payloads (uploads, exports).

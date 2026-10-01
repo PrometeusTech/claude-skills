@@ -23,6 +23,11 @@
 - If you must download via Blob (auth header required), revoke the object URL after use and use
   the server's `Content-Disposition` name.
 
+## Hostile names in the UI
+- File names and titles may be long, unbroken, RTL or full of emoji: wrap or truncate them,
+  isolate bidi text (`<bdi>`), and check the list at phone width (see the text-input-hardening
+  skill §4). Floating action buttons must not cover the last row's "Download".
+
 ## UI states
 - Empty, loading, error and "file removed" states; replacing a file shows the current file name
   and date; deleting asks for confirmation.

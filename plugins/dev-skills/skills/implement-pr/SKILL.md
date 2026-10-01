@@ -20,6 +20,10 @@ it is proven by tests and by the project's own checks, and it says honestly what
    - any endpoint, action, policy, role, serializer field, route guard → **authz-multitenancy**
    - lists, filters, search, serializers over associations, migrations, indexes, big pages →
      **db-performance**
+   - any free-text field (titles, tags, names, file names), uniqueness or de-duplication →
+     **text-input-hardening**
+   - create endpoints, idempotency keys, retries, concurrent writes, external HTTP clients →
+     **idempotency-retries**
    Most features touch at least two. If something important is unclear (a product rule, who may
    do what), ask before building rather than guessing in code.
 
@@ -28,7 +32,9 @@ it is proven by tests and by the project's own checks, and it says honestly what
 Write the tests that express the requirement and watch them fail for the right reason, then
 implement. For behavior changes to existing flows, first pin current behavior (a characterization
 test), then change it on purpose and show the diff of expectations. Cover the matrices the topic
-skills name (roles × tenants, accepted × rejected file types, 2 vs N query counts).
+skills name (roles × tenants, accepted × rejected file types, 2 vs N query counts, hostile strings,
+same-key concurrent requests). Assert effects, not fields: rows and storage objects left after a
+failure, the file name actually served, the second request's outcome.
 
 ## 3. Keep the scope tight
 

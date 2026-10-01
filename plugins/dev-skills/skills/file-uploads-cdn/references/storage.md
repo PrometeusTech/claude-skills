@@ -13,7 +13,16 @@
 - Keys: `<env>/<tenant-id>/<model>/<uuid>.<ext>`. Deleting the row deletes the object via the
   Storage API after commit.
 - Uploads from the backend: stream the tempfile to the Storage API (PUT with the key); check the
-  HTTP status; on failure raise a typed error the service turns into a clean response.
+  HTTP status; on failure raise a typed error the service turns into a clean response. Set
+  explicit timeouts on the client; PUT to the same key is idempotent, so a short bounded retry is
+  safe.
+- The pull-zone token-auth key and the storage-zone API key are different secrets with different
+  blast radius. Configure both; do not fall back from one to the other when one is missing —
+  fail at boot instead.
+- File name on download: a redirect to a signed pull-zone URL is served with the CDN's headers.
+  Check what name the browser saves (object name vs a disposition the CDN can set) and choose
+  object names / CDN settings accordingly; the app's `Content-Disposition` on the redirect does
+  not apply.
 - Caching: private files should not be cached publicly by intermediaries beyond the token TTL;
   replaced files get a new key rather than relying on purge.
 - Local development usually has no BunnyNet credentials: the project should fall back to local disk
