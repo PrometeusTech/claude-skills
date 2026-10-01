@@ -24,6 +24,11 @@ it is proven by tests and by the project's own checks, and it says honestly what
      **text-input-hardening**
    - create endpoints, idempotency keys, retries, concurrent writes, external HTTP clients →
      **idempotency-retries**
+   - params, redirects, fetching URLs, cookies/CORS, logging, analytics events, error handling,
+     public endpoints → **web-security**
+   - pages, forms, modals, routes, translations, data fetching → **frontend-quality**
+   - migrations, env vars, jobs, dependencies, breaking API changes, deploy order →
+     **deploy-safety**
    Most features touch at least two. If something important is unclear (a product rule, who may
    do what), ask before building rather than guessing in code.
 

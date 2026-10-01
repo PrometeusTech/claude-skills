@@ -1,6 +1,6 @@
 ---
 name: feature-judge
-description: Independent, evidence-based review ("judge") of a merged or open feature — reads the diff of one or more PRs across backend and frontend, runs the project's checks, exercises the app per role with hostile inputs, and reports only what it can prove, ranked by severity, with a coverage matrix and a ready-to-run fix prompt. Use it whenever the user asks to judge, audit, review in depth, "find any problem", "check the last changes", "verify this feature", or wants a second opinion on code performance, security or correctness of recent work — not for quick style feedback on a small diff. Pass the scope (PRs / commit ranges per repo) as arguments.
+description: Independent, evidence-based review ("judge") of a merged or open feature — reads the diff of one or more PRs across backend and frontend and their history, runs the project's checks, exercises the app per role with hostile inputs, breaks the code on purpose to test the tests, challenges every finding, and reports only what it can prove, ranked by severity, with a coverage matrix and a ready-to-run fix prompt. Use it whenever the user asks to judge, audit, review in depth, "find any problem", "check the last changes", "verify this feature", or wants a second opinion on code performance, security or correctness of recent work — not for quick style feedback on a small diff. Pass the scope (PRs / commit ranges per repo) as arguments.
 context: fork
 agent: general-purpose
 model: opus
@@ -22,7 +22,9 @@ directory, state that assumption at the top of the report, and continue.
 
 - **Read-only.** Do not change product code, push, merge or comment on PRs. Temporary probes
   (scripts, fixture files, throwaway tests) live in a scratch directory, or are deleted before you
-  finish; the working tree ends as you found it (check `git status` at the end).
+  finish. The only edits to product files are the one-line break-the-code probes (§3), each
+  reverted right after its test run. The working tree ends as you found it (check `git status`
+  and `git diff` at the end).
 - **Evidence or it is not a finding.** Every problem comes with the command, request, test or
   query that shows it, and the observed result. A suspicion you could not prove is reported as
   *unconfirmed*, separately.
@@ -42,6 +44,14 @@ Identify exactly what is being judged: PR numbers or merge commits per repo, and
 agent instructions — the intended behavior is the yardstick, not your preferences. Write down the
 intended role × action matrix before testing it.
 
+Then read the history of what the diff touches — it often names the bug before you find it:
+- `git log` / `git blame` on the modified lines: was this code recently fixed, reverted, or
+  written to handle a case the change now breaks?
+- Earlier PRs on the same files and their review comments (with the GitHub tools, when
+  available): does a past review remark apply again?
+- Comments in the modified files ("must run after…", "keep in sync with…"): does the change
+  respect them?
+
 ## 2. Checks
 
 Run the project's full local check (the local CI script if it exists, otherwise the CI steps by
@@ -51,7 +61,7 @@ pre-existing failures from the feature's. If something can't run here, note it.
 ## 3. Choose the lenses
 
 Map the changed files to topic skills and read their **review checklists**. Each item of each
-loaded checklist must end up in the coverage matrix (§5).
+loaded checklist must end up in the coverage matrix (§6).
 
 | The diff touches | Load |
 |---|---|
@@ -60,6 +70,9 @@ loaded checklist must end up in the coverage matrix (§5).
 | list endpoints, filters/search, serializers over associations, migrations/indexes, big UI lists, bundle | db-performance |
 | any free-text field: titles, names, descriptions, tags, file names, uniqueness rules, suggestions | text-input-hardening |
 | create endpoints, idempotency keys, retries, concurrent writes, unique constraints, external HTTP clients | idempotency-retries |
+| params lists, redirects, fetching URLs, cookies/CORS/CSP config, logging, analytics events, error handling, public endpoints | web-security |
+| pages, forms, modals, routes, translations, data-fetching hooks, third-party scripts | frontend-quality |
+| migrations, env vars, jobs/schedulers, dependencies/lockfiles, breaking contract changes, deploy order | deploy-safety |
 
 Always apply these as well, whatever the diff:
 - **Input robustness:** malformed params (wrong type, arrays/objects where scalars are expected,
@@ -74,8 +87,15 @@ Always apply these as well, whatever the diff:
   consumers.
 - **Error paths users actually hit:** acting on a record that was just deleted (by another tab or
   user) shows "not found", not "no permission" or a generic error.
+- **Silent failures:** in the diff, every `rescue` / `catch`, fallback value, retry and `?.`
+  chain on a required step — does a failure reach the user and the error tracker, or does the
+  caller report success with nothing done? (web-security §7.)
 - **Tests that prove the wrong thing:** stubs so broad a broken implementation would pass,
-  assertions on mocks instead of outcomes, missing negative cases.
+  assertions on mocks instead of outcomes, missing negative cases. **Prove it by breaking the
+  code:** for the 3–5 most important rules of the feature (a role check, a validation, a
+  tenant scope, a type check), make a temporary one-line change that removes the rule, run the
+  related tests, and record whether any fails. A rule whose removal leaves the suite green is an
+  untested rule (a finding). Revert each change immediately; the tree ends clean.
 - **UI with hostile content:** empty/error/loading states; laptop (1366 px) and phone (390 px)
   widths with long titles, many/long tags, RTL names; floating or sticky elements covering the
   last row's actions; accessible labels; confirmation on destructive actions; every entry point
@@ -98,22 +118,43 @@ Read the whole diff first. Then, for each hypothesis, try to prove or disprove i
 
 Prefer depth on the risky parts (security, data loss, shared infrastructure) over breadth on style.
 Do not skip a checklist item because it "looks fine" in the code — either run it or mark it
-skipped with the reason.
+skipped with the reason. The context window is large enough to read the whole diff and its
+neighbours; spend it on evidence, not on re-reading.
 
-## 5. Report
+## 5. Challenge each finding before reporting it
+
+For every candidate finding, argue against it from three angles and keep it only if it survives:
+
+- **Reachability** — can the input really come from a user (which role, which request)? Is there
+  a path to the faulty line in the default configuration, or only in a test setup?
+- **Impact** — what actually happens to a user or to data? Is the claimed consequence the real
+  one (a 500 vs a leak vs data loss)? Rate severity on that, not on how it looks.
+- **Defenses** — is something already stopping it (a framework default, a middleware, a DB
+  constraint, a check one frame up)? Refute only with a defense you located and read; "the
+  framework probably escapes this" is not one.
+
+Then classify it: **introduced or exposed by this change** (the diff adds the source, the sink,
+a new path to them, or removes a guard) vs **pre-existing** (source, sink and guards identical on
+the base). Pre-existing problems are still reported, in their own section, and are not counted
+against the change.
+
+## 6. Report
 
 Return this structure:
 
 1. **Summary** — 2–4 sentences: overall verdict and the most important problems.
 2. **Findings**, sorted by severity (Critical / High / Medium / Low / Note), as a table:
    `# | Severity | Repo · file:line | Problem | Evidence (command → result) | Impact | Proposed fix | Confirmed?`
-3. **Unconfirmed suspicions** — what you could not prove and what would settle it.
-4. **Coverage matrix** — one row per checklist item of every loaded skill and per always-on
+3. **Pre-existing problems** — real, proven, but not introduced by this change (same table).
+4. **Unconfirmed suspicions** — what you could not prove and what would settle it, and the
+   candidates you dropped in §5 with the reason (one line each).
+5. **Coverage matrix** — one row per checklist item of every loaded skill and per always-on
    check: `Item | Result (Finding #n / Verified OK / Skipped / N/A) | How (the probe and the
    observed effect, or why skipped)`. This replaces a free-form "looks OK" list: anything not in
    the matrix was not checked.
-5. **Checks run** — local CI results (head, and base where needed); performance and memory numbers.
-6. **Fix prompt** — a ready-to-paste prompt for an implementation session (use the implement-pr
+6. **Checks run** — local CI results (head, and base where needed); performance and memory
+   numbers; the break-the-code probes and which tests caught each one.
+7. **Fix prompt** — a ready-to-paste prompt for an implementation session (use the implement-pr
    workflow) covering the confirmed Critical / High / Medium findings: scope per repo, the tests
    to add first, verification steps. Low/Note items listed as optional.
 
