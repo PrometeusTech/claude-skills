@@ -12,7 +12,7 @@
 - MySQL 8 can scan an index backwards, so `DESC` order does not need a descending index.
 - Redundant: an index that is a left prefix of another (unless required for a foreign key, which
   needs *some* index starting with the FK column).
-- Unique indexes follow the column collation: with `utf8mb4_0900_ai_ci`, "Ana" = "ana" = "Ană".
+- Unique indexes follow the column collation: with `utf8mb4_0900_ai_ci`, "José" = "jose" = "JOSE".
   Audit duplicates with `GROUP BY col HAVING COUNT(*) > 1` under the same collation first.
 
 ## Text search

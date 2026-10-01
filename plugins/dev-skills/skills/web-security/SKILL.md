@@ -26,7 +26,7 @@ finding.
 
 ## 2. Writes accept only the intended fields
 
-- Strong params list exactly what this role may set. Fields like `client_id`, `role`, `status`,
+- Strong params list exactly what this role may set. Fields like `tenant_id`, `role`, `status`,
   `user_id`, `owner_id`, `price`, `verified`, `*_at` come from the server, not from the body.
 - Different roles that may set different fields → different param lists, chosen after
   authorization.
@@ -111,7 +111,7 @@ Silent failures hide both attacks and data loss:
 
 1. Store `<img src=x onerror=alert(1)>`, `javascript:alert(1)` and `"><svg onload=…>` in every new
    text/URL field; view it in the app, in emails, PDFs and exports.
-2. Send extra fields in each write (`client_id`, `role`, `status`, `user_id`, `*_at`) — are they
+2. Send extra fields in each write (`tenant_id`, `role`, `status`, `user_id`, `*_at`) — are they
    ignored? Compare the stored row.
 3. Redirect params with `//evil.example`, `https:evil.example`, `/\evil.example`.
 4. User-supplied URLs pointing at `http://127.0.0.1`, `http://169.254.169.254`, a private IP, a

@@ -1,6 +1,6 @@
 ---
 name: authz-multitenancy
-description: Rules and review checklist for authorization and tenant isolation — who may read or change what, in apps where data belongs to a tenant (complex, organization, account, workspace, building, team). Use it whenever you add or change an endpoint, controller action, policy, role, permission, admin screen, route guard, serializer field, export, cache, background job that reads tenant data, or "only admins can…" / "members can see…" rules, and whenever you review such changes — even when the task never says "security" or "authorization".
+description: Rules and review checklist for authorization and tenant isolation — who may read or change what, in apps where data belongs to a tenant (organization, account, workspace, project, team, building). Use it whenever you add or change an endpoint, controller action, policy, role, permission, admin screen, route guard, serializer field, export, cache, background job that reads tenant data, or "only admins can…" / "members can see…" rules, and whenever you review such changes — even when the task never says "security" or "authorization".
 ---
 
 # Authorization and multi-tenancy
@@ -33,8 +33,8 @@ authorization must fail in tests, not ship open.
 
 ## 3. Roles are per tenant; platform roles are not a skeleton key
 
-- Permissions derive from the user's role **in the record's tenant** (admin, president, member,
-  owner, tenant, operator…). Name the exact roles for each action; do not reuse a broad helper
+- Permissions derive from the user's role **in the record's tenant** (owner, admin, manager,
+  member, viewer, staff…). Name the exact roles for each action; do not reuse a broad helper
   whose role list happens to include roles the product did not approve (e.g. a "can manage" helper
   that also admits a role you did not intend).
 - Platform/global roles (super admin, staff) cover platform actions only (creating tenants,
@@ -46,7 +46,7 @@ authorization must fail in tests, not ship open.
 ## 4. Lists mirror details
 
 A list endpoint's scope returns exactly the records whose detail endpoint would authorize — same
-rules, same tenant, same visibility (e.g. "internal" notes, other households' records). Write the
+rules, same tenant, same visibility (e.g. "internal" notes, records of another user or sub-group). Write the
 scope from the policy, and test both with the same role matrix.
 
 ## 5. Foreign and missing look the same
@@ -73,7 +73,7 @@ ids. Authorize the parent (tenant) **before** looking up the child.
 - Menus, buttons and route guards hide what the user cannot do — for UX. The backend still refuses.
 - Derive the role from the **selected** tenant in the user profile, not from "any tenant where they
   are admin" or a global flag.
-- A guard must check the response body (e.g. `is_admin: true`), never treat any 200 as access.
+- A guard must check the response body (e.g. an explicit `allowed: true`), never treat any 200 as access.
 - A 403 from an action inside a page shows a message; it should not bounce the user to another page
   unless that is the product decision.
 
@@ -82,7 +82,7 @@ ids. Authorize the parent (tenant) **before** looking up the child.
 - [ ] Action authorizes; the verify-authorized safety net is active; public exceptions explicit.
 - [ ] Record loaded through the tenant / policy scope; tenant from the server.
 - [ ] Exact roles per action named in the policy; platform roles excluded unless intended.
-- [ ] Index scope mirrors the show rule; visibility rules (internal, per-household) applied in both.
+- [ ] Index scope mirrors the show rule; visibility rules (internal, per-user / per-sub-group) applied in both.
 - [ ] Foreign existing id and foreign missing id give the same response; parent authorized first.
 - [ ] Serializer per audience; side channels (exports, notifications, suggestions) checked.
 - [ ] Tests: role × action × {own tenant, foreign tenant existing id, foreign missing id,
@@ -97,7 +97,7 @@ ids. Authorize the parent (tenant) **before** looking up the child.
    product's intended matrix — write the matrix down first.
 2. Swap ids: own tenant's id → foreign existing id → foreign nonexistent id. Same status and body
    for the last two?
-3. Pass a `tenant_id` / `client_id` parameter pointing elsewhere; does anything trust it?
+3. Pass a `tenant_id` (or `org_id`, `account_id`) parameter pointing elsewhere; does anything trust it?
 4. Compare list vs detail with the same role: can the list reveal something the detail refuses
    (including counts, tag/suggestion lists, search results)?
 5. Look for broad helpers used where the product named specific roles — and for policies that
@@ -107,7 +107,7 @@ ids. Authorize the parent (tenant) **before** looking up the child.
 6. Serializer diff: any new field that a lower role should not see?
 7. Frontend: open the admin URL directly as a member; check the menu **and every entry point**
    (cards, links from other pages, dashboards) for each role, including users whose only role is
-   a restricted one (operator, staff) — a visible link that ends in a redirect is a bug; check that
+   a restricted one (e.g. staff-only or read-only) — a visible link that ends in a redirect is a bug; check that
    a 403 inside the page does not log the user out or redirect unexpectedly.
 8. Check the tests really exercise the matrix (not only the happy admin path).
 9. `grep` the diff for `Rails.cache`, `cache(`, `fetch(`, memoization in class variables: request

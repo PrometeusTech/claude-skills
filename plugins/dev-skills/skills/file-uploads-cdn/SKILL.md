@@ -125,8 +125,8 @@ Storage calls are not part of your DB transaction, so decide the order explicitl
   checked download as uploads.
 - User content inside them is escaped for the format (PDF markup, CSV formula injection: prefix
   cells starting with `=`, `+`, `-`, `@` with `'`).
-- Fonts cover the product's language (e.g. Romanian `ș ț ă î â` need a Unicode TTF; built-in PDF
-  fonts render them as `?` or crash) — test with real diacritics.
+- Fonts cover the product's language: letters outside Latin-1 (`ș ł ő č`, Cyrillic, Greek) need
+  a Unicode TTF; built-in PDF fonts render them as `?` or crash. Test with real text.
 - Heavy generation (many pages, images, whole-tenant exports) runs in a job or is bounded by size
   and time; the request does not block a web worker for tens of seconds.
 
@@ -181,6 +181,6 @@ Build the probe files in a scratch directory, never in the repo:
     reads into memory for large files.
 11. Memory and time for a max-size and a far-over-size upload (peak RSS of the worker, not only
     the response); storage stubbed to hang → bounded by the client timeout.
-12. Generated files: put `ș ț ă`, `=HYPERLINK(...)`, HTML and a 5,000-character text into the
+12. Generated files: put letters from the product's language outside Latin-1, `=HYPERLINK(...)`, HTML and a 5,000-character text into the
     source data; generate for the largest realistic tenant; check rendering, escaping, time and
     who can download it.

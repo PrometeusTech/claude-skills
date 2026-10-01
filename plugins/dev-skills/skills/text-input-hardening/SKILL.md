@@ -39,7 +39,7 @@ When the app checks uniqueness or de-duplicates (tags, titles, emails, slugs), t
 code must be the same one the database uses, or the two will disagree:
 
 - With a case- and accent-insensitive collation (MySQL `utf8mb4_0900_ai_ci`, the default),
-  `Ștampilă`, `stampila` and `STAMPILĂ` are equal for `WHERE` / unique indexes. Code that only
+  `Café`, `cafe` and `CAFÉ` are equal for `WHERE` / unique indexes. Code that only
   downcases will save "duplicates" that the DB then treats as one (or that a unique index rejects
   with a 500).
 - Options: let the database decide (`WHERE col = ?` already uses the column's collation; group
@@ -82,7 +82,8 @@ the stored row, any side effect (stored file, email), and the UI:
 2. `"‮fdp.exe"`, `"a​b"`, `"﻿title"` → stripped or rejected; uniqueness not fooled.
 3. Exactly the max length, max+1, 10× max, and a 4-byte emoji string near the max → the field's
    own error, no truncation by the DB, no unrelated error message.
-4. Case/diacritic twins: `Cerere`, `cerere`, `CERERE`, `Cerére`; `Ștampilă` / `stampila` → same
+4. Case/diacritic twins in the product's language: `Report`, `report`, `REPORT`, `Répört`;
+   `Café` / `cafe` → same
    decision in code and DB; suggestions show one entry.
 5. Lists: 0 items, max items, max+1, 1000 items, duplicates inside one request.
 6. Empty after cleaning: `"   "`, `"​"` → "required" error.

@@ -43,7 +43,7 @@ response anyway (stale, may point at a deleted record), or 410/404. Whatever you
 ## 4. Own the store in one place
 
 A shared idempotency store belongs to shared infrastructure, not to whichever domain built it
-first. A new feature should not import another domain's store class (`Onboarding::…Store`) —
+first. A new feature should not import another domain's store class (`Billing::IdempotencyStore` used from `Documents::`) —
 extract a generic one, or note the coupling as a follow-up.
 
 ## 5. Uniqueness races

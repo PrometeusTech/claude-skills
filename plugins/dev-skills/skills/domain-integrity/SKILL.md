@@ -6,8 +6,8 @@ description: Rules and review checklist for business logic that must stay correc
 # Domain integrity
 
 The bugs that cost the most in business apps are quiet: a booking cancelled after it was
-completed, two reservations for the same tool on the same day, a total that is off by 0.01, a
-deadline that is "today" in UTC but "tomorrow" in Bucharest, a counter that drifts from the rows it
+completed, two reservations for the same room on the same day, a total that is off by 0.01, a
+deadline that is "today" in UTC but already "tomorrow" in the users' time zone, a counter that drifts from the rows it
 counts, an admin change nobody can trace. They pass every happy-path test. The rules below keep
 the model honest; the checklist is what a reviewer tries.
 
@@ -32,7 +32,7 @@ the model honest; the checklist is what a reviewer tries.
 - Rounding is decided once (half-up / banker's, at which step) and applied in one helper; totals
   are computed from rounded line items, and the sum of the parts equals the shown total.
 - Currency is explicit when more than one is possible.
-- Amounts that must stay separate (deposits vs charges, guarantees vs obligations) are not summed
+- Amounts that must stay separate (deposits vs charges, refundable vs non-refundable) are not summed
   by convenience; each has its own field and label.
 - Negative, zero and very large amounts are validated against product rules and column capacity.
 
@@ -62,7 +62,7 @@ the model honest; the checklist is what a reviewer tries.
   equals its children, a membership exists for every active role, one active row per key) and
   where they are enforced (DB constraint, transaction, recomputation).
 - Cached counters / totals are updated in the same transaction as the rows, or recomputed; an
-  audit task (e.g. a `data:audit` invariant) checks them in production.
+  audit task (a scheduled consistency check) verifies them in production.
 - A multi-step write is one transaction; external effects (emails, storage, HTTP) are outside it
   and after commit.
 - Callbacks that change other records are visible in the service, not hidden in model callbacks
@@ -102,7 +102,8 @@ the model honest; the checklist is what a reviewer tries.
    approvals): exactly one wins, the other gets the documented error, side effects happen once.
 3. Amounts: 0, 0.005, 0.015, a negative, the column maximum; a total of many items with
    fractions — does the sum of shown parts equal the shown total? Any `to_f` / float math?
-4. Freeze time at 23:30 and 00:30 Bucharest (21:30 / 22:30 UTC), on the last day of a month, on
+4. Freeze time just before and after local midnight in the product's zone (for a zone ahead of
+   UTC that is still the previous day in UTC), on the last day of a month, on
    Feb 29 and on DST days; check "today", deadlines, ranges and reports.
 5. Two concurrent bookings for the same resource and overlapping or touching ranges; a stock of 1
    claimed twice at once.

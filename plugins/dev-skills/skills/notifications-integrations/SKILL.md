@@ -1,12 +1,12 @@
 ---
 name: notifications-integrations
-description: Rules and review checklist for messages and third-party integrations — e-mails, push, SMS and WhatsApp notifications (when they are sent, to whom, how often, in which language, with what content), bulk sends to a whole tenant, user preferences and opt-out, inbound webhooks (signature verification, replay, ordering, idempotent processing, fast acknowledgement) and outbound calls to providers (Brevo, Zernio, payment, maps). Use it whenever you add or change a mailer, a notification, a message template, a recipient list, a webhook endpoint or handler, or a client for an external provider, and whenever you review such code — even if the task only says "notify the admin" or "handle the delivery status".
+description: Rules and review checklist for messages and third-party integrations — e-mails, push, SMS and WhatsApp notifications (when they are sent, to whom, how often, in which language, with what content), bulk sends to a whole tenant, user preferences and opt-out, inbound webhooks (signature verification, replay, ordering, idempotent processing, fast acknowledgement) and outbound calls to providers (e-mail/SMS/messaging services, payments, maps). Use it whenever you add or change a mailer, a notification, a message template, a recipient list, a webhook endpoint or handler, or a client for an external provider, and whenever you review such code — even if the task only says "notify the admin" or "handle the delivery status".
 ---
 
 # Notifications and integrations
 
 Messages leave the system and cannot be taken back: an e-mail sent for a transaction that rolled
-back, a notification to a resident of another building, the same WhatsApp message three times
+back, a notification to a member of another tenant, the same WhatsApp message three times
 because the job retried, a link to the staging site, a webhook that anyone can forge. The rules
 below apply while building; the checklist is what a reviewer tries.
 
@@ -25,8 +25,8 @@ below apply while building; the checklist is what a reviewer tries.
 
 - Recipient lists are computed from the tenant of the record and the roles the product named —
   not "all users with role X" across tenants, and not inactive or removed members.
-- Personal data of one user is not sent to another unless the product requires it (no resident
-  phone numbers in a message to other residents).
+- Personal data of one user is not sent to another unless the product requires it (no member's
+  phone number in a message to other members).
 - User preferences and opt-outs are honored per channel; legally required messages (password,
   security) are the only exceptions, and are labeled as such.
 
