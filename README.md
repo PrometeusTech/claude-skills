@@ -18,6 +18,7 @@ pe disc local. Repo-ul e un **marketplace de plugin-uri** Claude Code cu un sing
 | `deploy-safety` | subiect | migrații, expand / contract, compatibilitate API ↔ frontend vechi, variabile de mediu, job-uri și scheduler-e, dependențe, rollback |
 | `domain-integrity` | subiect | state machines, sume și rotunjiri, date / ore / fus orar, rezervări și suprapuneri, contoare și invarianți, soft delete, audit trail |
 | `notifications-integrations` | subiect | e-mail / push / WhatsApp: după commit, o singură dată, destinatarii corecți, traduceri, volum; webhook-uri primite (semnătură, replay, ordine); clienți de provideri |
+| `pre-pr-check` | flux | verificare light pe diff la finalul unei schimbări, înainte de PR: gate-ul local, `/code-review`, `/security-review`, checklist-urile pe fișierele schimbate, probe ca teste; scrie secțiunea „Pre-PR check” |
 | `implement-pr` | flux | implementarea unei schimbări ca un PR: context, teste întâi, verificare locală, raport |
 | `feature-judge` | flux | review independent, cu dovezi, pe unul sau mai multe PR-uri, cu prompt de fix |
 
@@ -39,7 +40,15 @@ claude plugin marketplace add PrometeusTech/claude-skills --scope project
 claude plugin install dev-skills@claude-skills --scope project
 ```
 
-Fă commit la `.claude/settings.json`. Orice sesiune din proiect are apoi skill-urile.
+Fă commit la `.claude/settings.json`. Orice sesiune **locală** (terminal, IDE) din proiect are apoi
+skill-urile.
+
+**Sesiunile cloud (claude.ai/code) nu instalează pluginurile declarate de un repo**, dar încarcă
+`.claude/skills/` din repo. Pentru ele, copiază skill-urile în proiect cu un script care le ia din
+acest repo la un commit fixat (`plugins/dev-skills/skills/*` → `.claude/skills/`) și notează
+commit-ul într-un fișier lock; nu edita copiile, schimbă-le aici și resincronizează. Regulile
+proprii proiectului stau lângă ele, într-un skill `<proiect>-checks`, pe care `pre-pr-check`,
+`implement-pr` și `feature-judge` îl citesc primul.
 
 ### Doar pentru tine, în toate proiectele de pe mașină
 
@@ -60,7 +69,16 @@ Skill-urile de subiect se încarcă singure când task-ul se potrivește cu desc
 flux se pot cere explicit:
 
 - `/dev-skills:implement-pr` + ce ai de implementat
+- `/dev-skills:pre-pr-check` — la finalul schimbărilor, înainte de PR (`implement-pr` îl rulează singur)
 - `/dev-skills:feature-judge` + PR-urile sau intervalul de commit-uri de verificat
+
+### Fluxul recomandat
+
+| Nivel | Când | Ce | Cost |
+|---|---|---|---|
+| Gate local | la fiecare push (hook `pre-push`, opțional) | scriptul de CI local al proiectului | doar timp |
+| `pre-pr-check` | o dată, la finalul implementării, înainte de PR | diff-only: gate, `/code-review`, `/security-review`, checklist-uri, probe ca teste; scrie „Pre-PR check” în PR | ~30–60k tokeni |
+| `feature-judge` | o dată pe feature, **pe PR-ul deschis, înainte de merge** | aplicația pornită, roluri, concurență, volum, cod stricat intenționat; pornește de la „left for the judge” din Pre-PR check | ~300–400k tokeni |
 
 `feature-judge` rulează ca **sub-agent separat** (`context: fork`) pe modelul `opus`, în prim-plan
 (`background: false`, ca să aibă toate tool-urile). Sub-agentul nu vede conversația, deci scopul

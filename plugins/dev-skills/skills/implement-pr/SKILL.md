@@ -69,17 +69,20 @@ failure, the file name actually served, the second request's outcome.
 
 ## 5. Review yourself before anyone else does
 
-- Run the available review tooling on your diff (e.g. `/code-review`; `/security-review` when the
-  change touches auth, input handling, files, external calls or personal data — it reviews the
-  current branch against the default branch), then re-read the diff as an adversary: what input, role, race or failure would break this? Apply the topic skills' review
-  checklists to your own work.
+- When the change is complete, run the **pre-pr-check** skill: the local gate, `/code-review`,
+  `/security-review` (when the change touches auth, input handling, files, external calls or
+  personal data), the project and topic checklists on the changed files, and cheap probes added as
+  tests. It produces the "Pre-PR check" section for the PR description.
+- Re-read the diff as an adversary as well: what input, role, race or failure would break this?
 - Fix what you find before pushing. One validated push beats three speculative ones.
 
 ## 6. Hand over honestly
 
 - Update the plan / status docs the project keeps (status row, details, discovered items).
-- PR description: what changed and why, how it was verified (commands and results), what was not
-  done and why, follow-ups discovered. Link the sibling PR in multi-repo changes and state merge
+- PR description: what changed and why, how it was verified (commands and results), the
+  "Pre-PR check" section, what was not done and why, follow-ups discovered. Link the sibling PR in multi-repo changes and state merge
   order (backend first when the frontend depends on a new contract).
 - Never skip, disable or loosen a test or check to get green; never claim a check passed that you
   did not run.
+- The full **feature-judge** runs on the open PR, before merge, so its findings land in the same
+  PR. Say in the PR description that it is ready for the judge.
