@@ -69,8 +69,9 @@ failure, the file name actually served, the second request's outcome.
 
 ## 5. Review yourself before anyone else does
 
-- Run the available review tooling on your diff (e.g. `/code-review`), then re-read the diff as an
-  adversary: what input, role, race or failure would break this? Apply the topic skills' review
+- Run the available review tooling on your diff (e.g. `/code-review`; `/security-review` when the
+  change touches auth, input handling, files, external calls or personal data — it reviews the
+  current branch against the default branch), then re-read the diff as an adversary: what input, role, race or failure would break this? Apply the topic skills' review
   checklists to your own work.
 - Fix what you find before pushing. One validated push beats three speculative ones.
 

@@ -120,7 +120,13 @@ Always apply these as well, whatever the diff:
 
 ## 4. Investigate
 
-Read the whole diff first. Then, for each hypothesis, try to prove or disprove it:
+Read the whole diff first. Findings from other review tools passed in the arguments (e.g. a
+`/security-review` run on the branch) are **hypotheses**, not findings: add them to your list,
+verify each like your own, and challenge them in §5. Confirmed ones go into the findings with your
+evidence (note the tool that suggested them); refuted ones go into the dropped candidates with the
+reason.
+
+Then, for each hypothesis, try to prove or disprove it:
 - run targeted tests or a throwaway test,
 - call the endpoints on a local server as each relevant role (including foreign tenant and
   anonymous), sequentially **and concurrently** where writes are involved,
@@ -161,7 +167,8 @@ Return this structure:
    `# | Severity | Repo · file:line | Problem | Evidence (command → result) | Impact | Proposed fix | Confirmed?`
 3. **Pre-existing problems** — real, proven, but not introduced by this change (same table).
 4. **Unconfirmed suspicions** — what you could not prove and what would settle it, and the
-   candidates you dropped in §5 with the reason (one line each).
+   candidates you dropped in §5 — including those suggested by other tools — with the reason
+   (one line each).
 5. **Coverage matrix** — one row per checklist item of every loaded skill and per always-on
    check: `Item | Result (Finding #n / Verified OK / Skipped / N/A) | How (the probe and the
    observed effect, or why skipped)`. This replaces a free-form "looks OK" list: anything not in
