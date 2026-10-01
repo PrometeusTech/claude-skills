@@ -13,6 +13,9 @@ pe disc local. Repo-ul e un **marketplace de plugin-uri** Claude Code cu un sing
 | `db-performance` | subiect | liste, paginare, N+1, indecși, căutare, migrații, liste mari în UI |
 | `text-input-hardening` | subiect | câmpuri text (titluri, tag-uri, nume de fișier): caractere invizibile, lungimi, unicitate după colația DB, text ostil în UI |
 | `idempotency-retries` | subiect | create cu `Idempotency-Key`, retry-uri, cereri concurente, indecși unici, timeout-uri pe clienți HTTP externi |
+| `web-security` | subiect | XSS, params permise, redirect-uri, SSRF, CORS/CSRF, secrete și date personale în loguri / analytics, endpoint-uri publice, erori silențioase |
+| `frontend-quality` | subiect | accesibilitate (axe, tastatură), traduceri complete, date proaspete după modificări, deep link / refresh / back, stări, CSP, cost per pagină |
+| `deploy-safety` | subiect | migrații, expand / contract, compatibilitate API ↔ frontend vechi, variabile de mediu, job-uri, dependențe, rollback |
 | `implement-pr` | flux | implementarea unei schimbări ca un PR: context, teste întâi, verificare locală, raport |
 | `feature-judge` | flux | review independent, cu dovezi, pe unul sau mai multe PR-uri, cu prompt de fix |
 
@@ -67,6 +70,24 @@ se dă complet în argumente (repo-uri, PR-uri sau commit-uri, planul de referin
 Când un judge sau un review găsește o categorie nouă de problemă, adaug-o în lista de verificare
 a skill-ului de subiect potrivit (sau într-un skill nou), printr-un PR aici. Așa lecția ajunge în
 toate proiectele.
+
+### Ce am preluat din pluginurile oficiale Anthropic
+
+Câteva idei din [`claude-plugins-official`](https://github.com/anthropics/claude-plugins-official)
+sunt integrate direct în skill-uri, fără dependență de pluginuri:
+- `code-review`: istoricul git și comentariile din PR-urile anterioare pe aceleași fișiere;
+  respectarea comentariilor din cod;
+- `pr-review-toolkit`: erorile silențioase (`silent-failure-hunter`), testele care nu prind
+  regresii (`pr-test-analyzer`);
+- `claude-security`: fiecare problemă e contestată pe accesibilitate, impact și apărări
+  existente, iar problemele care existau înainte de PR sunt separate.
+
+`claude-security` poate fi rulat și separat, ca scanare de securitate dedicată pe un diff; are
+nevoie de tool-ul Workflow.
+
+Context: Opus 5.5 și Sonnet 5.5 rulează nativ cu fereastră de 1M tokeni, inclusiv în sub-agentul
+judge-ului, deci un singur agent poate citi tot diff-ul unui feature. Consumul real al unui judge
+e de ordinul 250–400k tokeni.
 
 Rezultatele evaluărilor (cu skill vs fără skill) sunt în `evals/`, fără detalii din proiectele
 pe care s-au rulat.

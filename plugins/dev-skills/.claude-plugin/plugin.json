@@ -1,6 +1,6 @@
 {
   "name": "dev-skills",
-  "description": "Implementation rules + review checklists for uploads/CDN, authorization/multi-tenancy, DB performance, hostile text input and idempotency/retries, plus implement-pr and feature-judge workflows. Rails + React oriented, BunnyNet or local-disk storage.",
+  "description": "Implementation rules + review checklists for uploads/CDN, authorization/multi-tenancy, DB performance, hostile text input, idempotency/retries, web security, frontend quality and deploy safety, plus implement-pr and feature-judge workflows. Rails + React oriented, BunnyNet or local-disk storage.",
   "author": {
     "name": "PrometeusTech"
   }
