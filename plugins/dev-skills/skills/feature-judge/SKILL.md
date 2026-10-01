@@ -61,7 +61,15 @@ pre-existing failures from the feature's. If something can't run here, note it.
 ## 3. Choose the lenses
 
 Map the changed files to topic skills and read their **review checklists**. Each item of each
-loaded checklist must end up in the coverage matrix (§6).
+loaded checklist must end up in the coverage matrix (§6). The topic skills are available as
+skills, and as files next to this one (`../<skill-name>/SKILL.md` from this skill's base
+directory) — read the file if the skill cannot be invoked from here.
+
+**Project checks come first.** In each repo under review, look in `.claude/skills/` for project
+skills named `*-checks` (or described as the project's review rules). Read them; they hold the
+project's own rules, test accounts, commands and known pitfalls, and they win over the generic
+skills when the two disagree. Their checklist items go into the coverage matrix like any other
+lens.
 
 | The diff touches | Load |
 |---|---|

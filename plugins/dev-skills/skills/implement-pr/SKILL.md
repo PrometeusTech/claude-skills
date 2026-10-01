@@ -33,7 +33,9 @@ it is proven by tests and by the project's own checks, and it says honestly what
      **domain-integrity**
    - e-mails, notifications, message templates, webhooks, provider clients →
      **notifications-integrations**
-   Most features touch at least two. If something important is unclear (a product rule, who may
+   Most features touch at least two. Also read the project's own `*-checks` skills in
+   `.claude/skills/` of each repo, if any: they hold the project's rules and win over the generic
+   ones. If something important is unclear (a product rule, who may
    do what), ask before building rather than guessing in code.
 
 ## 2. Tests first
