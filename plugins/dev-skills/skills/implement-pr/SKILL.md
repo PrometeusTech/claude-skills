@@ -63,6 +63,8 @@ failure, the file name actually served, the second request's outcome.
 - Find the project's CI definition and any local runner script (`bin/ci`, `make check`, an npm `ci` script,
   `make check`…). Run all of it locally before pushing — tests, lint, type check, security scan,
   schema drift, contract checks, build — and fix what fails. Do not rely on remote CI being up.
+  While iterating, use the project's diff-scoped gate when it has one (same checks, scoped to
+  the change); the full gate runs once, on the final state (pre-pr-check, §5).
 - If a step cannot run in your environment, say which and why; do not report it as passing.
 - For performance-relevant changes, measure on realistic volume and put the numbers in the PR.
 - For UI, run the app and try the flow for each affected role at a laptop width and on mobile.

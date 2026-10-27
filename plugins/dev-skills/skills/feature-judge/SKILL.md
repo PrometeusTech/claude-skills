@@ -62,9 +62,13 @@ Then read the history of what the diff touches — it often names the bug before
 
 ## 2. Checks
 
-Run the project's full local check (the local CI script if it exists, otherwise the CI steps by
-hand) on the feature's head. Only if something fails, run the same step on the base to tell
-pre-existing failures from the feature's. If something can't run here, note it.
+Read the project's CI results on the feature's head commit first (the check runs of the open
+PR, with the GitHub tools when available): a job that is green there is not re-run locally —
+record it as such in §6. Run locally only what CI did not run on that exact commit (a head not
+pushed yet, a job CI does not have, a step skipped there), using the project's local CI script
+if it exists, otherwise the CI steps by hand, and reproduce locally any job that failed, to read
+its output. Only if something fails, run the same step on the base to tell pre-existing
+failures from the feature's. If something can't run here, note it.
 
 ## 3. Choose the lenses
 
