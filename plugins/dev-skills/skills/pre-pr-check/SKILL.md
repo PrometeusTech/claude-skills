@@ -22,9 +22,19 @@ pages/routes, translations, contract).
 
 ## 2. Gate
 
-Run the project's full local gate on the final state (the local CI script named in the project's
-agent docs or `*-checks` skill). If it already ran green on exactly this state in this session,
-say so instead of re-running. Fix failures before going on; never skip or loosen a test.
+Run the project's local gate (the local CI script named in the project's agent docs or `*-checks`
+skill). Two modes, when the project has them:
+- while iterating (after each round of fixes, including the ones from §3), the project's
+  **diff-scoped** gate — the same checks, scoped to what changed (related tests, cached lint
+  and type checks, generated code re-checked only when its inputs changed); never a looser
+  gate, and never a hand-picked subset of the full gate;
+- **once, on the final state**, the full gate. If it already ran green on exactly this state in
+  this session, say so instead of re-running. If the head is pushed and the project's CI ran
+  the same gate green on that commit, that counts as the final run (read the check runs, do
+  not re-run them locally).
+
+Fix failures before going on; never skip or loosen a test. Say in the report which mode ran on
+which commit.
 
 ## 3. Built-in reviews
 
