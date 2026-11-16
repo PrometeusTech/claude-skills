@@ -1,10 +1,16 @@
 # claude-skills
 
 Skill-uri personale pentru Claude Code, pentru proiecte Rails + React, cu fișiere pe BunnyNet sau
-pe disc local. Repo-ul e un **marketplace de plugin-uri** Claude Code cu un singur plugin,
-`dev-skills`.
+pe disc local, și pentru aplicațiile lor mobile în React Native / Expo. Repo-ul e un
+**marketplace de plugin-uri** Claude Code cu două plugin-uri:
+
+- `dev-skills` — backend și web; se instalează în orice proiect;
+- `mobile-skills` — aplicația mobilă; se instalează, lângă `dev-skills`, doar în proiectele care
+  au o aplicație mobilă (sau un backend folosit de una).
 
 ## Ce conține
+
+### `dev-skills`
 
 | Skill | Tip | Când se folosește |
 |---|---|---|
@@ -22,9 +28,26 @@ pe disc local. Repo-ul e un **marketplace de plugin-uri** Claude Code cu un sing
 | `implement-pr` | flux | implementarea unei schimbări ca un PR: context, teste întâi, verificare locală, raport |
 | `feature-judge` | flux | review independent, cu dovezi, pe unul sau mai multe PR-uri, cu prompt de fix |
 
+### `mobile-skills`
+
+| Skill | Tip | Când se folosește |
+|---|---|---|
+| `mobile-release-compat` | subiect | build-uri vechi instalate luni de zile vs API-ul nou, versiune minimă și update forțat, OTA vs build nou în store (runtime version, schimbări native), rollout treptat, configurare per mediu, regulile App Store / Google Play (ștergerea contului, privacy manifest, data safety, permisiuni) |
+| `mobile-offline-lifecycle` | subiect | timeout-uri și retry-uri sigure, scrieri întrerupte și cozi offline, cache salvat local (versiune, ștergere la logout), revenire din fundal, aplicația omorâtă de OS, task-uri în fundal, baze locale cu migrări |
+| `mobile-security` | subiect | clientul nu e de încredere, token-uri în Keychain / Keystore, sesiune și refresh concurent, logout care șterge tot, deep link-uri ca input ostil, WebView, „tot ce e în bundle e public”, loguri / crash reports, ecrane sensibile în app switcher |
+| `mobile-push-deeplinks` | subiect | permisiunea pentru notificări, token-uri per utilizator și dispozitiv, conținut pe lock screen, canale Android, tap cu aplicația închisă / în fundal / deschisă, universal links / App Links și fișierele de verificare |
+| `mobile-ui-quality` | subiect | VoiceOver / TalkBack, text mărit din setări, ținte de atingere, safe areas, tastatura, back pe Android, ecrane mici și tablete, dark mode, stări, performanța listelor și a imaginilor |
+
+Extensii în `dev-skills` pentru mobil: `file-uploads-cdn/references/react-native.md` (poze din
+cameră, HEIC, compresie, EXIF GPS, upload întrerupt), o secțiune despre push în
+`notifications-integrations`, build-urile mobile în `deploy-safety`, iar `implement-pr`,
+`pre-pr-check` și `feature-judge` încarcă skill-urile mobile când diff-ul atinge aplicația. Ce cere
+un simulator sau un telefon (screen reader, tastatură, push, link-uri, offline) apare ca „needs a
+device” — nu se poate rula într-un container cloud și nu se raportează ca verificat.
+
 Skill-urile de subiect au **reguli de implementare și listă de verificare** în același loc, deci
 se folosesc atât la construire, cât și la review. Specificul de framework e în `references/`
-(Rails, React, MySQL, BunnyNet), citit doar când e nevoie.
+(Rails, React, MySQL, BunnyNet, React Native / Expo), citit doar când e nevoie.
 
 Specificul unui proiect anume (roluri, decizii, scripturi) **nu** stă aici: rămâne în
 `AGENTS.md` / `CLAUDE.md` / `.claude/skills/` din repo-ul proiectului.
@@ -38,6 +61,8 @@ Din rădăcina proiectului, o singură dată:
 ```bash
 claude plugin marketplace add PrometeusTech/claude-skills --scope project
 claude plugin install dev-skills@claude-skills --scope project
+# doar dacă proiectul are (sau servește) o aplicație mobilă:
+claude plugin install mobile-skills@claude-skills --scope project
 ```
 
 Fă commit la `.claude/settings.json`. Orice sesiune **locală** (terminal, IDE) din proiect are apoi
@@ -45,7 +70,8 @@ skill-urile.
 
 **Sesiunile cloud (claude.ai/code) nu instalează pluginurile declarate de un repo**, dar încarcă
 `.claude/skills/` din repo. Pentru ele, copiază skill-urile în proiect cu un script care le ia din
-acest repo la un commit fixat (`plugins/dev-skills/skills/*` → `.claude/skills/`) și notează
+acest repo la un commit fixat (`plugins/dev-skills/skills/*`, plus `plugins/mobile-skills/skills/*`
+în proiectele cu aplicație mobilă → `.claude/skills/`) și notează
 commit-ul într-un fișier lock; nu edita copiile, schimbă-le aici și resincronizează. Regulile
 proprii proiectului stau lângă ele, într-un skill `<proiect>-checks`, pe care `pre-pr-check`,
 `implement-pr` și `feature-judge` îl citesc primul.
@@ -55,6 +81,7 @@ proprii proiectului stau lângă ele, într-un skill `<proiect>-checks`, pe care
 ```bash
 claude plugin marketplace add PrometeusTech/claude-skills
 claude plugin install dev-skills@claude-skills
+claude plugin install mobile-skills@claude-skills   # opțional
 ```
 
 ### Update-uri

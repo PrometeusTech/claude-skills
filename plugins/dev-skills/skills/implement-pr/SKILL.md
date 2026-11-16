@@ -33,6 +33,12 @@ it is proven by tests and by the project's own checks, and it says honestly what
      **domain-integrity**
    - e-mails, notifications, message templates, webhooks, provider clients →
      **notifications-integrations**
+   - a mobile app (React Native / Expo), or a backend endpoint a mobile app calls → the
+     **mobile-skills** plugin: **mobile-release-compat** (any API change a shipped build sees,
+     app config, native dependencies, store-facing changes), **mobile-offline-lifecycle** (data
+     fetching, mutations, caches, local storage), **mobile-security** (session, storage, links,
+     WebViews, keys), **mobile-push-deeplinks** (push, links into the app), **mobile-ui-quality**
+     (screens, forms, lists); for files also `file-uploads-cdn/references/react-native.md`
    Most features touch at least two. Also read the project's own `*-checks` skills in
    `.claude/skills/` of each repo, if any: they hold the project's rules and win over the generic
    ones. If something important is unclear (a product rule, who may
@@ -68,6 +74,12 @@ failure, the file name actually served, the second request's outcome.
 - If a step cannot run in your environment, say which and why; do not report it as passing.
 - For performance-relevant changes, measure on realistic volume and put the numbers in the PR.
 - For UI, run the app and try the flow for each affected role at a laptop width and on mobile.
+- For a mobile app, run what works without a device: unit / component tests, type check, lint,
+  `npx expo install --check`, `npx expo-doctor`, a production bundle export for both platforms
+  (`npx expo export`), the resolved public config, and a fingerprint comparison with the base to
+  know whether the change needs a store build. Flows on a simulator or device (screen readers,
+  keyboard, push, links, offline) usually cannot run in a cloud container: list them in the PR as
+  "needs a device", never as passed.
 
 ## 5. Review yourself before anyone else does
 

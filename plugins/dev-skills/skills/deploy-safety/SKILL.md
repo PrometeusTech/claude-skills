@@ -33,6 +33,9 @@ Code and schema do not change at the same instant, and old clients linger:
   versioned or coordinated, and the contract check (e.g. oasdiff) is green or explicitly accepted.
 - **Frontend after a deploy:** users keep old tabs open for hours — old bundles must keep working
   against the new API until they reload; chunk-load failures after a deploy reload cleanly.
+- **Mobile apps:** installed builds stay in use for months, not hours, and cannot be recalled —
+  an API used by a mobile app follows mobile-skills:mobile-release-compat (version data, minimum
+  supported version, OTA vs store build).
 - State the deploy order in the PR (backend first, then frontend, or the reverse) when it matters.
 
 ## 3. Configuration and secrets

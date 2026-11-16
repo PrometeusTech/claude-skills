@@ -75,7 +75,10 @@ failures from the feature's. If something can't run here, note it.
 Map the changed files to topic skills and read their **review checklists**. Each item of each
 loaded checklist must end up in the coverage matrix (§6). The topic skills are available as
 skills, and as files next to this one (`../<skill-name>/SKILL.md` from this skill's base
-directory) — read the file if the skill cannot be invoked from here.
+directory) — read the file if the skill cannot be invoked from here. The mobile lenses come from
+the separate `mobile-skills` plugin (`mobile-skills:<name>`); when the skills are copied into a
+project they sit next to this one as well. If a mobile lens applies and is not available, say so
+in the report and apply its intent from the rules below.
 
 **Project checks come first.** In each repo under review, look in `.claude/skills/` for project
 skills named `*-checks` (or described as the project's review rules). Read them; they hold the
@@ -95,6 +98,11 @@ lens.
 | migrations, env vars, jobs/schedulers, dependencies/lockfiles, breaking contract changes, deploy order | deploy-safety |
 | statuses/transitions, amounts/totals, dates/ranges/schedules, bookings/stock, counters, soft delete, admin actions on others' data | domain-integrity |
 | mailers, notifications, message templates, recipient lists, webhook endpoints/handlers, provider clients | notifications-integrations |
+| mobile app API usage, backend endpoints a mobile app calls, app.json / app.config / eas.json, native dependencies, permissions, sign-in / account flows, update logic | mobile-release-compat |
+| mobile data fetching, mutations, caches, local storage / DB, app-state and background handling | mobile-offline-lifecycle |
+| mobile session and token handling, local storage, deep-link routes, WebViews, API keys / SDK config, logging and crash reporting | mobile-security |
+| push permission / token registration / payloads / tap handling, universal / app links, verification files | mobile-push-deeplinks |
+| mobile screens, forms, lists, modals / sheets, navigation, translations, images, permission prompts | mobile-ui-quality |
 
 Always apply these as well, whatever the diff:
 - **Input robustness:** malformed params (wrong type, arrays/objects where scalars are expected,
@@ -126,6 +134,12 @@ Always apply these as well, whatever the diff:
   widths with long titles, many/long tags, RTL names; floating or sticky elements covering the
   last row's actions; accessible labels; confirmation on destructive actions; every entry point
   (menu, cards, links from other pages) for each role, including restricted-only roles.
+- **Mobile, when the change reaches a mobile app or an endpoint one calls:** the oldest
+  supported app build against the head API (its API client tests at least); a new enum value or
+  error code sent to the current app; native vs JS-only (fingerprint) against the release plan.
+  Device-only checks (screen readers, keyboard, push, links, offline on a simulator or phone) run
+  only if a device or simulator is available — usually not in a cloud container; otherwise they
+  are *Skipped — needs a device* in the coverage matrix, never *Verified OK*.
 - **Maintainability:** new code importing another domain's internals (coupling), duplicated
   infrastructure, React anti-patterns (state updates inside another state updater, effects that
   fetch twice, derived state stored in state).

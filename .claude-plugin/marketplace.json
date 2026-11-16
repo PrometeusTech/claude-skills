@@ -1,6 +1,6 @@
 {
   "name": "claude-skills",
-  "description": "Personal Claude Code skills for Rails + React projects: topic skills (file uploads / CDN, authorization / multi-tenancy, DB performance, text input, idempotency, web security, frontend quality, deploy safety, domain integrity, notifications) and workflow skills (implement-pr, pre-pr-check, feature-judge).",
+  "description": "Personal Claude Code skills for Rails + React projects and their React Native / Expo mobile apps: dev-skills (topic skills for uploads, authorization, DB performance, text input, idempotency, web security, frontend quality, deploy safety, domain integrity, notifications, plus implement-pr, pre-pr-check and feature-judge) and mobile-skills (release compatibility, offline and lifecycle, mobile security, push and deep links, mobile UI quality).",
   "owner": {
     "name": "PrometeusTech"
   },
@@ -9,6 +9,11 @@
       "name": "dev-skills",
       "source": "./plugins/dev-skills",
       "description": "Implementation rules + review checklists for uploads/CDN, authorization/multi-tenancy, DB performance, hostile text input, idempotency/retries, web security, frontend quality, deploy safety, domain integrity and notifications/integrations, plus implement-pr, pre-pr-check and feature-judge workflows."
+    },
+    {
+      "name": "mobile-skills",
+      "source": "./plugins/mobile-skills",
+      "description": "Implementation rules + review checklists for React Native / Expo apps: release and version compatibility, offline and app lifecycle, mobile security, push notifications and deep links, mobile UI quality. Install it in projects that have a mobile app, next to dev-skills."
     }
   ]
 }
