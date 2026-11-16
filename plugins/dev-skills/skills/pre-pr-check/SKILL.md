@@ -49,7 +49,8 @@ acting on it.
 ## 4. Checklists, on the changed files only
 
 Read the project's `*-checks` skills in `.claude/skills/` first, then the review checklists of the
-topic skills that match the changed areas (the mapping table in the feature-judge skill). For each
+topic skills that match the changed areas (the mapping table in the feature-judge skill — including
+the mobile-skills rows when the diff touches a mobile app or an endpoint one calls). For each
 item that applies to **this diff**, check it statically (read the code) and mark it OK / problem /
 left for the judge. Skip items that need the running app or volume — list them as left for the
 judge rather than guessing.
@@ -63,6 +64,12 @@ Always, whatever the diff:
 - No secrets, tokens or personal data in logs, job arguments, analytics or error-tracker context.
 - No swallowed errors (`rescue`/`catch` that reports success).
 - Plan / status docs updated.
+
+When a mobile app is involved, also:
+- Every field, enum value, error code or endpoint removed or changed: does a shipped app build
+  still use it (`git grep` at the tag of the oldest supported release)?
+- Native change or JS-only (fingerprint vs base)? The PR says store build or OTA update.
+- No secret in inlined env vars or public app config; tokens only in the secure store.
 
 ## 5. Cheap probes as tests
 
@@ -85,6 +92,7 @@ string (NUL, bidi override, over-long) in each new text field, each new error co
 - Checklists applied: <skills> — <n items OK, n fixed>
 - Probes added as tests: <list>
 - Left for the judge: <items that need the running app, browser, volume or concurrency>
+- Needs a device: <mobile checks that need a simulator or phone — screen readers, keyboard, push, links, offline>
 - Follow-ups: <non-blocking items not done>
 ```
 

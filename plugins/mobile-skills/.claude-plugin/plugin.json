@@ -1,0 +1,7 @@
+{
+  "name": "mobile-skills",
+  "description": "Implementation rules + review checklists for mobile apps (React Native / Expo): release and version compatibility (old builds vs new API, OTA vs store builds, store rules), offline and app lifecycle, mobile security (token storage, session, deep links, WebViews, bundle secrets), push notifications and deep links on the device, and mobile UI quality (screen readers, text scaling, keyboard, safe areas, performance). Complements dev-skills.",
+  "author": {
+    "name": "PrometeusTech"
+  }
+}

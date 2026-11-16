@@ -29,6 +29,9 @@ below apply while building; the checklist is what a reviewer tries.
   phone number in a message to other members).
 - User preferences and opt-outs are honored per channel; legally required messages (password,
   security) are the only exceptions, and are labeled as such.
+- Push goes to the devices currently registered for the recipient (a token per user and device
+  installation); tokens the provider reports as invalid are deleted, and a device whose user
+  logged out receives nothing more. The device side is in mobile-skills:mobile-push-deeplinks.
 
 ## 3. Volume and pacing
 

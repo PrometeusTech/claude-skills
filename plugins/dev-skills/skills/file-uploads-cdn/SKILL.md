@@ -134,7 +134,8 @@ Storage calls are not part of your DB transaction, so decide the order explicitl
 
 Mirror the server rules in the UI (accept attribute, size check, readable error) so users get fast
 feedback — but the server stays the only enforcement. Map the server's error codes to translated
-messages. See `references/react.md`.
+messages. See `references/react.md` for web and `references/react-native.md` for mobile apps
+(camera and gallery photos, HEIC, compression, EXIF GPS, interrupted uploads).
 
 ## Implementation checklist
 
